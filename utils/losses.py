@@ -26,10 +26,8 @@ def vae_loss(x, x_rec, sigmas, mu, logvar, output_info_list, factor=1):
                 
                 end = start + span_info.dim
 #                 loss.append(cross_entropy(x_rec[:, start:end], x[:, start:end], reduction='sum'))
-                loss.append(mse_loss(x_rec[:, start:end], x[:, start:end], reduction='sum'))
+                loss.append(mse_loss(x_rec[:, start:end], x[:, start:end], reduction='mean'))
                 start = end
-    print(start, x_rec.size(1))
-#     assert start == x_rec.size()[1]
     
     # KL
     KLD = -0.5 * torch.sum(1 + logvar - mu**2 - logvar.exp())
