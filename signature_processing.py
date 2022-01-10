@@ -24,4 +24,4 @@ for dataset in dataset_folders:
                 pickle.dump(signature_dict, fout)
         except:
             print(f"Error while convert {directory}")
-            shutil.move(directory, f"fails/{dataset}")
+            shutil.move(directory, f"./data/zip/fails/{dataset}")
