@@ -55,6 +55,8 @@ class TVAE(nn.Module):
         
         self.data_dim = data_dim
         self.emb_dim = emb_dim
+        self.encoder_hiddens = encoder_hiddens
+        self.decoder_hiddens = decoder_hiddens
         
         self.encoder = encoder if encoder is not None else Encoder(data_dim, encoder_hiddens, emb_dim)
         self.decoder = decoder if decoder is not None else Decoder(emb_dim, decoder_hiddens, data_dim)
