@@ -130,3 +130,9 @@ dmypy.json
 
 #driver
 data/chromedriver
+data/zip/raw/*
+data/zip/draft/*
+data/zip/fails/*
+data/zip/dataset/*
+
+
