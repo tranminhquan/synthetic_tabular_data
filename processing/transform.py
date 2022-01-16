@@ -189,6 +189,8 @@ class TabTransform():
                 
             rs_data.append(inverse_data)
             column_names.append(col_transform_info.column_name)
+
+            start = start + dim
         
         rs_data = np.column_stack(rs_data)
         
