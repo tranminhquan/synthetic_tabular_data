@@ -3,6 +3,8 @@ Syntheic Tabular Data using Variational Auto Encoder
 
 Status
 - [x] Implement automated data cleaning
+- [x] Implement frequency encoder
+  - [x] Add normalized option  
 - [x] Implement data transform for tabular
 - [x] Implement baseline VAE
 - [x] Signature representation

@@ -18,8 +18,7 @@ class TabCleaning():
             pct_to_remove: `float`, percentage compare to number of values to remove. If the number of categories is equal or greater than pct*number of data, it will be removed
         """
         if pd.core.dtypes.common.is_string_dtype(series) or pd.core.dtypes.common.is_integer_dtype(series):
-            frequency = series.value_counts().to_dict()
-            frequency = {k : v / len(series.values) for k,v in frequency.items()}
+            frequency = series.value_counts().to_dict() / len(series.values)
             
             if max(list(frequency.values())) < min_freq_threshold:
                 return True

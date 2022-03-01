@@ -24,7 +24,6 @@ data_dir = pickle.load(open('data/demo/demo_tabular_data.pkl', 'rb'))
 # transform config
 max_cols = 50
 categorical_columns = ['gender', 'high_spec', 'degree_type', 'work_experience', 'mba_spec', 'placed']
-categorical_norm = True # normalized frequency encoding for categorical data
 max_guassian_components = 10
 gaussian_weight_threshold = 5e-3
 
@@ -41,7 +40,7 @@ lr = 1e-3
 l2norm = 1e-5
 gpu=True
 recloss_factor = 1.
-save_dir='results/demo_v2' # folder to store weights of model
+save_dir='results/demo' # folder to store weights of model
 model_prefix=None # name of weights
 # END CONFIG ================================
 
@@ -61,7 +60,7 @@ tabtransform = TabTransform(categorical_cols=categorical_columns,
                             max_cols=max_cols, 
                             max_guassian_components=max_guassian_components, 
                             gaussian_weight_threshold=gaussian_weight_threshold)
-tabtransform.fit(df, categorical_norm=categorical_norm)
+tabtransform.fit(df)
 data = tabtransform.transform(df)
 
 # DATASET AND DATA LOADER

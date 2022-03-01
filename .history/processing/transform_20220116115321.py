@@ -15,20 +15,6 @@ ColumnTransformInfo = namedtuple(
 )
 
 
-from collections import namedtuple
-from sklearn.mixture import BayesianGaussianMixture
-import numpy as np
-
-SpanInfo = namedtuple('SpanInfo', ['dim', 'activation_fn'])
-ColumnTransformInfo = namedtuple(
-    'ColumnTransformInfo', [
-        'column_name', 'column_type',
-        'transform', 'transform_aux',
-        'output_info', 'output_dimensions'
-    ]
-)
-
-
 class TabTransform():
     
     def __init__(self, categorical_cols, max_cols, max_guassian_components=10, gaussian_weight_threshold=5e-3):
@@ -36,8 +22,8 @@ class TabTransform():
         self.max_cols = max_cols # fixed maximum cols (len of inputs) to fit to model
         self.max_guassian_components = max_guassian_components # fixed maximum gaussian components for numerical col
         self.gaussian_weight_threshold = gaussian_weight_threshold # threshold to consider a gaussian component
-                
-    def fit(self, df, categorical_norm=False):
+        
+    def fit(self, df):
         """
         fit the column values (numerical or categorical)
         
@@ -63,21 +49,21 @@ class TabTransform():
         
         for col in df.columns:
             if col in self.categorical_cols:
-                col_transform_info = self.fit_categorical(col, df[col], categorical_norm)
+                col_transform_info = self.fit_categorical(col, df[col])
             else:
-                col_transform_info = self.fit_numerical(col, df[col], categorical_norm)
+                col_transform_info = self.fit_numerical(col, df[col])
                 
             self.output_info_list.append(col_transform_info.output_info)
             self.col_transform_info_list.append(col_transform_info)
             self.dimensions += col_transform_info.output_dimensions
         
     
-    def fit_categorical(self, col_name, data, categorical_norm):
+    def fit_categorical(self, col_name, data):
         """
         Categorical column values are encoded by counting (or calculate frequency)
         """
         
-        frequency_encoder = FrequencyEncoder(categorical_norm)
+        frequency_encoder = FrequencyEncoder()
         frequency_encoder.fit(data)
         
         return ColumnTransformInfo(column_name=col_name,
@@ -87,7 +73,7 @@ class TabTransform():
                                    output_info=[SpanInfo(1, 'softmax')],
                                    output_dimensions=1)
     
-    def fit_numerical(self, col_name, data, categorical_norm):
+    def fit_numerical(self, col_name, data):
         """
         Fit Bayesian Gaussian Mixture to numerical column
         """
@@ -105,7 +91,7 @@ class TabTransform():
         num_components = valid_component_indicator.sum()
         
         # placeholder to encode GMM components labels
-        component_encoder = FrequencyEncoder(categorical_norm)
+        component_encoder = FrequencyEncoder()
         
         return ColumnTransformInfo(column_name=col_name,
                                    column_type='numerical',
@@ -145,8 +131,7 @@ class TabTransform():
         encoder = col_trans_info.transform[0]
         data = encoder.transform(data)
         
-#         return [np.expand_dims(data.to_numpy(), axis=-1).astype(int)]
-        return [np.expand_dims(data.to_numpy(), axis=-1).astype(float)]
+        return [np.expand_dims(data.to_numpy(), axis=-1).astype(int)]
     
     def transform_numerical(self, col_trans_info, data, eps=1e-6):
         """
@@ -188,7 +173,7 @@ class TabTransform():
         
         return [selected_normalized_values, selected_components.reshape(-1,1)] # selected_components' labels are encoded by FrequencyEncoder
     
-    def inverse_transform(self, data, sigmas=None, sigmoid=False):
+    def inverse_transform(self, data, sigmas=None):
         start = 0
         
         rs_data = []
@@ -197,38 +182,29 @@ class TabTransform():
             dim = col_transform_info.output_dimensions
             col_data = data[:, start:start+dim]
             
-            # categorical column
             if col_transform_info.column_type == 'categorical':
-                inverse_data = self.inverse_transform_categorical(col_transform_info, col_data, sigmoid)
-                
-            # numerical column
+                inverse_data = self.inverse_transform_categorical(col_transform_info, col_data)
             elif col_transform_info.column_type == 'numerical':
-#                 print(col_transform_info.column_name, '=================')
-#                 print('col_data shape: ', col_data.shape)
-#                 print('col_data [:, 0]: ', col_data[:,0])
-#                 print('col_data [:, 1]: ', col_data[:,1])
-                inverse_data = self.inverse_transform_numerical(col_transform_info, col_data, sigmas, start, sigmoid)
+                inverse_data = self.inverse_transform_numerical(col_transform_info, col_data, sigmas, start)
                 
             rs_data.append(inverse_data)
             column_names.append(col_transform_info.column_name)
+
             start = start + dim
         
         rs_data = np.column_stack(rs_data)
         
-        # TO-DO: problem with `int` datatype
+        # BUG: problem with `int` datatype
 #         return pd.DataFrame(rs_data, columns=column_names).astype(self.raw_dtypes)
         return pd.DataFrame(rs_data, columns=column_names)
                 
-    def inverse_transform_categorical(self, col_trans_info, data, sigmoid=False):
+    def inverse_transform_categorical(self, col_trans_info, data):
         encoder = col_trans_info.transform[0]
-        
-        if sigmoid:
-            data[:,0] = 1 / (1 + np.exp(-data[:,0]))
         inverse_trans_data = encoder.inverse_transform(data[:,0])
         
         return np.array(inverse_trans_data)
     
-    def inverse_transform_numerical(self, col_trans_info, data, sigmas, start, sigmoid=False):
+    def inverse_transform_numerical(self, col_trans_info, data, sigmas, start):
         gm = col_trans_info.transform[0]
         valid_component_indicator = col_trans_info.transform_aux[0]
         
@@ -244,12 +220,9 @@ class TabTransform():
             selected_normalized_values = np.random.normal(selected_normalized_values, sig)
             
         selected_normalized_values = np.clip(selected_normalized_values, -1, 1)
-#         component_probs = np.ones((len(data), self.max_guassian_components)) * -100 #redundant code
+        component_probs = np.ones((len(data), self.max_guassian_components)) * -100
 
         component_encoder = col_trans_info.transform[1]
-    
-        if sigmoid:
-            selected_component_probs = 1 / (1 + np.exp(-selected_component_probs))
         selected_components = component_encoder.inverse_transform(selected_component_probs, cal_from_dist=True)
         
         means = gm.means_.reshape([1, -1])
@@ -257,13 +230,7 @@ class TabTransform():
         means_t = means[:, selected_components]
         stds_t = stds[:, selected_components]
         
-#         print('selected components probs: ', selected_component_probs)
-#         print('selected components: ', selected_components)
-#         print('means_t: ', means_t)
-#         print('stds_t: ', stds_t)
-        
         inverse_trans_data = selected_normalized_values * 4 * stds_t + means_t
         inverse_trans_data = inverse_trans_data.reshape([-1])
         
         return inverse_trans_data
-    

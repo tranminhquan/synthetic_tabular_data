@@ -8,7 +8,7 @@ import os
 import torch
 
 # CONFIG =============================
-save_dir = 'results/demo_v2'
+save_dir = 'results/demo'
 model_prefix = 'model'
 
 n_samples = 200
@@ -40,10 +40,6 @@ inv_df = tabtransform.inverse_transform(inv_data, sigmas, sigmoid=use_sigmoid)
 
 categorical_columns = ['gender', 'high_spec', 'degree_type', 'work_experience', 'mba_spec', 'placed']
 
-# print synthetic data
-print(inv_df)
-
-# show the distribution of categorical values
 for cate_col in categorical_columns:
-    print(inv_df[cate_col].value_counts())
+    print(inv_df, inv_df[cate_col].value_counts())
     print('---')

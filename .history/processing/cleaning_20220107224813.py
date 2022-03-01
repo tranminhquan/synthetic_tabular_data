@@ -9,22 +9,14 @@ class TabCleaning():
             return True
         return False
             
-    def is_low_frequency_categorical_col(self, series, min_freq_threshold=0.08, pct_to_remove=0.8):
-        """
-        Detect low frequency of categories (e.g. columns with ids, addresses, etc.)
-        Args:
-            series: `Series` pandas, data input
-            min_freq_threshold: `float`, default is 0.08. Unless maximum category frequency is equal or greater than the threhold, the column will be removed
-            pct_to_remove: `float`, percentage compare to number of values to remove. If the number of categories is equal or greater than pct*number of data, it will be removed
-        """
+    def is_low_frequency_categorical_col(self, series):
         if pd.core.dtypes.common.is_string_dtype(series) or pd.core.dtypes.common.is_integer_dtype(series):
             frequency = series.value_counts().to_dict()
-            frequency = {k : v / len(series.values) for k,v in frequency.items()}
             
-            if max(list(frequency.values())) < min_freq_threshold:
+            if max(list(frequency.values())) < 5:
                 return True
             
-            if len(frequency) >= pct_to_remove * len(series):
+            if len(frequency) >= 0.8 * len(series):
                 return True
             
         return False

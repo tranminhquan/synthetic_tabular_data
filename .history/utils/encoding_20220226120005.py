@@ -41,10 +41,13 @@ class FrequencyEncoder():
             cal_from_dist: calculate the distance of column values to each labels and chose the minimum one
         """
         assert self.mapping_dict is not None
+#         inv_mapping_dict = {v:k for k,v in self.mapping_dict.items()}
+#         print(inv_mapping_dict)
         
         if cal_from_dist:            
             pred_indices = np.array([[abs(k - lb) for lb in list(self.mapping_dict.values())] for k in data])
             pred_indices = np.argmin(pred_indices, axis=1)
+#             print(pred_indices.shape)
             
             pred_labels = [list(self.mapping_dict.keys())[k] for k in pred_indices]
         

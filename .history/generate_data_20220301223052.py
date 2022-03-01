@@ -37,13 +37,4 @@ tabtransform = pickle.load(open(transform_path, 'rb'))
 inv_data, sigmas = model.cpu().sample(n_samples=n_samples, batch_size=batch_size)
 inv_df = tabtransform.inverse_transform(inv_data, sigmas, sigmoid=use_sigmoid)
 
-
-categorical_columns = ['gender', 'high_spec', 'degree_type', 'work_experience', 'mba_spec', 'placed']
-
-# print synthetic data
-print(inv_df)
-
-# show the distribution of categorical values
-for cate_col in categorical_columns:
-    print(inv_df[cate_col].value_counts())
-    print('---')
+print(inv_df, inv_df['high_spec'].value_counts())

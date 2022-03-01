@@ -8,8 +8,8 @@ import os
 import torch
 
 # CONFIG =============================
-save_dir = 'results/demo_v2'
-model_prefix = 'model'
+save_dir = 'results/demo'
+model_prefix = 'model_v2'
 
 n_samples = 200
 batch_size = 64
