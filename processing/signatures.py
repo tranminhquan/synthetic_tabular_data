@@ -22,6 +22,8 @@ class TransformerEncoder(nn.Module):
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name_or_path if tokenizer_name_or_path is not None else model_name_or_path, 
                                                        cache_dir=cache_dir, 
                                                        **tokenizer_args)
+        
+        self.embedding_dim = 192 # TO-DO: hard code setting
 
         self.avgPolling = nn.AvgPool1d(pooling_size, stride=pooling_size) if pooling_size > 0 else None
 
@@ -77,6 +79,12 @@ class TransformerEncoder(nn.Module):
             embedding = self.encode(features, to_numpy=True)
             signature_dict[field] = embedding
         return signature_dict
+    
+    def encode_col_name(self, column_name):
+        features = self.tokenize(column_name)
+        embedding = self.encode(features, to_numpy=True)
+        
+        return embedding
 
     def forward(self, features, to_numpy=True):
         return self.encode(features, to_numpy)

@@ -9,7 +9,8 @@ def train(model, train_loader, epochs, optimizer, criterion, device, val_loader=
     
     model = model.to(device)
     output_info_list = kwargs['output_info_list']
-    recloss_factor = kwargs['recloss_factor'] if 'recloss_factor' in kwargs else 1.
+    recloss_factor = kwargs['recloss_factor'] if 'recloss_factor'  in kwargs else 1.
+    optimize_signature = kwargs['optimize_signature'] if 'optimize_signature' in kwargs else False
 
     for epoch in range(epochs):  # loop over the dataset multiple times
     
@@ -31,7 +32,7 @@ def train(model, train_loader, epochs, optimizer, criterion, device, val_loader=
 
             # forward + backward + optimize
             outputs, mu, logvar, sigmas = model(inputs)
-            rec_loss, kl_loss = criterion(outputs, inputs, sigmas, mu, logvar, output_info_list, recloss_factor)
+            rec_loss, kl_loss = criterion(outputs, inputs, sigmas, mu, logvar, output_info_list, recloss_factor, optimize_signature)
             loss = rec_loss + kl_loss
             
             loss.backward()

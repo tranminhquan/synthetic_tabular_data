@@ -16,18 +16,31 @@ Download samples data from this [link](https://drive.google.com/drive/folders/1C
 
 
 ## Run
-Note: The result has not been verified yet. Below is to ensure the pipeline can run successfully
+Note: The result has not been verified yet. Below is to ensure the pipeline can run successfully. Open a terminal and:
+
+### Create virtual environment and install packages
 
 0. `cd` to the root path of project
 
-1. Activate the virtual environment
-`source env2/bin/activate`
+1. Create the virtual environment named `env`
+`python3 -m venv env`
 
-2. Go to file `train.py` to change the config or run with the defaults by command
+2. Activate the virtual environment
+`source env/bin/activate`
+
+3. Upgrade to the latest pip
+`pip install --upgrade pip`
+
+4. Install packages from `requirements.txt`
+`pip install -r requirements.txt`
+
+### Training and Generating
+
+1. Go to file `train.py` to change the config or run with the defaults by command 
 `python train.py`
     After the training completes, model weights and meta data will be stored in folder `results`
 
-3. To generate synthetic data after training, go to file `generate_data.py` to change the config or run with the defaults by command
+2. To generate synthetic data after training, go to file `generate_data.py` to change the config or run with the defaults by command
 `python generate_data.py`
 
 

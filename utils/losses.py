@@ -1,7 +1,7 @@
 import torch
 from torch.nn.functional import cross_entropy, mse_loss
 
-def vae_loss(x, x_rec, sigmas, mu, logvar, output_info_list, factor=1):
+def vae_loss(x, x_rec, sigmas, mu, logvar, output_info_list, factor=1, optimize_signature=False):
     """
     Loss of VAE: reconstruction loss and KDL
     """
@@ -10,7 +10,8 @@ def vae_loss(x, x_rec, sigmas, mu, logvar, output_info_list, factor=1):
     
     for output_info in output_info_list:
         for span_info in output_info:
-            if span_info.activation_fn != 'softmax': #numerical values (alpha)
+#             if span_info.activation_fn != 'softmax': #numerical values (alpha)
+            if span_info.activation_fn == 'tanh': #numerical values (alpha)
                 end = start + span_info.dim
                 std = sigmas[start]
 #                 print('x rec numerical: ', x[:, start].size())
@@ -24,7 +25,8 @@ def vae_loss(x, x_rec, sigmas, mu, logvar, output_info_list, factor=1):
 #                 print('x size at 0: ', x.size()[0])
 #                 print('log std: ', loss[-1])
                 start = end
-            else: # categorical values (beta and d)
+            elif span_info.activation_fn == 'softmax': # categorical values (beta and d)
+#             else:
                 """
                 QS: The categorical values are encoded using frequency, so how to calculate the loss of them.
                 Should we use MSE or CE? 
@@ -40,10 +42,17 @@ def vae_loss(x, x_rec, sigmas, mu, logvar, output_info_list, factor=1):
                 loss.append(mse_loss((x_rec[:, start:end]), x[:, start:end], reduction='sum'))
 #                 print('mse categorical loss: ', loss[-1])
                 start = end
+            elif optimize_signature and span_info.activation_fn == 'colname_embedding':
+                end = start + span_info.dim
+                loss.append(mse_loss(x_rec[:, start:end], x[:, start:end], reduction='sum'))
+                start = end
+            else:
+                start = start + span_info.dim
+            
     
     # KL
     KLD = -0.5 * torch.sum(1 + logvar - mu**2 - logvar.exp())
     
-    print('vae loss: ', (sum(loss) * factor) / x.size(0), ' | KLD: ', KLD / x.size(0)), 
+    # print('vae loss: ', (sum(loss) * factor) / x.size(0), ' | KLD: ', KLD / x.size(0)), 
     return (sum(loss) * factor) / x.size(0), KLD / x.size(0)
     

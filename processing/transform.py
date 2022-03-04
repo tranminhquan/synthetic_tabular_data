@@ -4,6 +4,7 @@ from sklearn.mixture import BayesianGaussianMixture
 import numpy as np
 import pandas as pd
 from utils.encoding import FrequencyEncoder
+from processing.signatures import TransformerEncoder
 
 SpanInfo = namedtuple('SpanInfo', ['dim', 'activation_fn'])
 ColumnTransformInfo = namedtuple(
@@ -31,13 +32,36 @@ ColumnTransformInfo = namedtuple(
 
 class TabTransform():
     
-    def __init__(self, categorical_cols, max_cols, max_guassian_components=10, gaussian_weight_threshold=5e-3):
+    def __init__(self, categorical_cols, 
+                 max_cols, 
+                 max_guassian_components=10, 
+                 gaussian_weight_threshold=5e-3,
+                 col_name_embedding=False,
+                 **kwargs):
+        """init
+
+        Args:
+            categorical_cols ([list]): [list of categorical columns]
+            max_cols ([int]): [number of maximum cols]
+            max_guassian_components (int, optional): [description]. Defaults to 10.
+            gaussian_weight_threshold ([int], optional): [numner of gaussian components in numerical columns]. Defaults to 5e-3.
+            col_name_embedding (bool, optional): [Whether to use column name as additional signature feature or not]. Defaults to False.
+        """
+        
         self.categorical_cols = categorical_cols # list or numpy array of categorical column names
         self.max_cols = max_cols # fixed maximum cols (len of inputs) to fit to model
         self.max_guassian_components = max_guassian_components # fixed maximum gaussian components for numerical col
         self.gaussian_weight_threshold = gaussian_weight_threshold # threshold to consider a gaussian component
+        
+        # column names embedding
+        if col_name_embedding:
+            max_seq_length = kwargs['max_seq_length'] if 'max_seq_length' in kwargs else 10
+            pooling_size = kwargs['pooling_size'] if 'pooling_size' in kwargs else 4
+            self.colname_transformer = TransformerEncoder("bert-base-multilingual-uncased", max_seq_length=max_seq_length, pooling_size=pooling_size)
+        else:
+            self.colname_transformer = None
                 
-    def fit(self, df, categorical_norm=False):
+    def fit(self, df, categorical_norm=True):
         """
         fit the column values (numerical or categorical)
         
@@ -80,12 +104,18 @@ class TabTransform():
         frequency_encoder = FrequencyEncoder(categorical_norm)
         frequency_encoder.fit(data)
         
+        output_info = [SpanInfo(1, 'softmax')]
+        output_dimensions = 1
+        if self.colname_transformer is not None:
+            output_info.append(SpanInfo(self.colname_transformer.embedding_dim, 'colname_embedding'))
+            output_dimensions += self.colname_transformer.embedding_dim
+        
         return ColumnTransformInfo(column_name=col_name,
                                    column_type='categorical',
                                    transform=[frequency_encoder],
                                    transform_aux=[frequency_encoder.mapping_dict],
-                                   output_info=[SpanInfo(1, 'softmax')],
-                                   output_dimensions=1)
+                                   output_info=output_info,
+                                   output_dimensions=output_dimensions)
     
     def fit_numerical(self, col_name, data, categorical_norm):
         """
@@ -107,12 +137,19 @@ class TabTransform():
         # placeholder to encode GMM components labels
         component_encoder = FrequencyEncoder(categorical_norm)
         
+        
+        output_info = [SpanInfo(1, 'tanh'), SpanInfo(1, 'softmax')]        
+        output_dimensions = 2
+        if self.colname_transformer is not None:
+            output_info.append(SpanInfo(self.colname_transformer.embedding_dim, 'colname_embedding'))
+            output_dimensions += self.colname_transformer.embedding_dim
+        
         return ColumnTransformInfo(column_name=col_name,
                                    column_type='numerical',
                                    transform=[gm, component_encoder],
                                    transform_aux=[valid_component_indicator, component_encoder.mapping_dict],
-                                   output_info=[SpanInfo(1, 'tanh'), SpanInfo(1, 'softmax')],
-                                   output_dimensions=2)
+                                   output_info=output_info,
+                                   output_dimensions=output_dimensions)
     
     def transform(self, df):
         col_data_list = []
@@ -127,8 +164,9 @@ class TabTransform():
                 
             elif col_transform_info.column_type == 'numerical':
                 col_data_list += self.transform_numerical(col_transform_info, df[col_transform_info.column_name])
-                
+        
         col_data_list = np.concatenate(col_data_list, axis=1)
+        
         
         # TODO: cropping if number of cols of tabular > max_cols
         
@@ -145,8 +183,13 @@ class TabTransform():
         encoder = col_trans_info.transform[0]
         data = encoder.transform(data)
         
-#         return [np.expand_dims(data.to_numpy(), axis=-1).astype(int)]
+        # column name embedding
+        if self.colname_transformer is not None:
+            colname_embedding = self.colname_transformer.encode_col_name(col_trans_info.column_name)
+            return [np.expand_dims(data.to_numpy(), axis=-1).astype(float), np.tile(colname_embedding, (len(data),1))]
+            
         return [np.expand_dims(data.to_numpy(), axis=-1).astype(float)]
+        
     
     def transform_numerical(self, col_trans_info, data, eps=1e-6):
         """
@@ -186,6 +229,11 @@ class TabTransform():
         component_encoder.fit(selected_components)
         selected_components = component_encoder.transform(selected_components)
         
+        # column name embedding
+        if self.colname_transformer is not None:
+            colname_embedding = self.colname_transformer.encode_col_name(col_trans_info.column_name)
+            return [selected_normalized_values, selected_components.reshape(-1,1), np.tile(colname_embedding, (len(data),1))] # selected_components' labels are encoded by FrequencyEncoder
+        # 
         return [selected_normalized_values, selected_components.reshape(-1,1)] # selected_components' labels are encoded by FrequencyEncoder
     
     def inverse_transform(self, data, sigmas=None, sigmoid=False):

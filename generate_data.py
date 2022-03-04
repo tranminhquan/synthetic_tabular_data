@@ -8,7 +8,7 @@ import os
 import torch
 
 # CONFIG =============================
-save_dir = 'results/demo_v2'
+save_dir = 'results/demo_v3'
 model_prefix = 'model'
 
 n_samples = 200
