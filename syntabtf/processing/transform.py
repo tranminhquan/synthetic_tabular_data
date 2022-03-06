@@ -3,8 +3,8 @@ from collections import namedtuple
 from sklearn.mixture import BayesianGaussianMixture
 import numpy as np
 import pandas as pd
-from utils.encoding import FrequencyEncoder
-from processing.signatures import TransformerEncoder
+from syntabtf.utils.encoding import FrequencyEncoder
+from syntabtf.processing.signatures import TransformerEncoder
 
 SpanInfo = namedtuple('SpanInfo', ['dim', 'activation_fn'])
 ColumnTransformInfo = namedtuple(

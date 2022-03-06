@@ -9,11 +9,11 @@ import pickle
 import pandas as pd
 import os
 
-from processing.cleaning import TabCleaning
-from processing.transform import TabTransform
-from utils.losses import vae_loss
-from utils.training import train
-from nn.vae import TVAE
+from syntabtf.processing.cleaning import TabCleaning
+from syntabtf.processing.transform import TabTransform
+from syntabtf.utils.losses import vae_loss
+from syntabtf.utils.training import train
+from syntabtf.nn.vae import TVAE
 
 # CONFIG ================================
 # data config
@@ -46,7 +46,7 @@ l2norm = 1e-5
 gpu=True
 recloss_factor = 1.
 save_dir='results/demo_v3' # folder to store weights of model
-model_prefix=None # name of weights
+model_prefix='model' # name of weights
 # END CONFIG ================================
 
 

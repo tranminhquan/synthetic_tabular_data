@@ -1,8 +1,8 @@
 # QuanTran
 # TO-DO: Implement CLI for generating sample
 
-from processing.transform import TabTransform
-from nn.vae import TVAE
+from syntabtf.processing.transform import TabTransform
+from syntabtf.nn.vae import TVAE
 import pickle
 import os
 import torch

@@ -8,6 +8,8 @@ Status
 - [x] Implement data transform for tabular
 - [x] Implement baseline VAE
 - [x] Signature representation
+  - [x] Column name embedding (extracted from BERT)
+  - [ ] Quantiles
 - [x] Test training pipeline
 - [ ] Verify the training and generating data results
 
@@ -22,7 +24,7 @@ Note: The result has not been verified yet. Below is to ensure the pipeline can 
 
 0. `cd` to the root path of project
 
-1. Create the virtual environment named `env`
+1. Create the virtual environment named *env*
 `python3 -m venv env`
 
 2. Activate the virtual environment
@@ -31,13 +33,16 @@ Note: The result has not been verified yet. Below is to ensure the pipeline can 
 3. Upgrade to the latest pip
 `pip install --upgrade pip`
 
-4. Install packages from `requirements.txt`
+4. Install packages from *requirements.txt*
 `pip install -r requirements.txt`
 
 ### Training and Generating
 
 1. Go to file `train.py` to change the config or run with the defaults by command 
 `python train.py`
+The configurations in `train.py` are as follows:
+
+
     After the training completes, model weights and meta data will be stored in folder `results`
 
 2. To generate synthetic data after training, go to file `generate_data.py` to change the config or run with the defaults by command
