@@ -1,0 +1,38 @@
+df_path: data/demo/demo_tabular_data.pkl
+clean_data: True
+transform:
+  max_cols: 3000
+  signature_settings:
+    column_name_embedding: True
+    quantile: False
+  categorical_columns:
+    - gender
+    - high_spec
+    - degree_type
+    - work_experience
+    - mba_spec
+    - placed
+  categorical_settings:
+    normalize: True
+  numerical_settings:
+    max_gaussian_components: 10
+    gaussian_weight_threshold: 5.e-3
+model:
+  encoder_hiddens:
+    - 128
+    - 128
+  decoder_hiddens:
+    - 128
+    - 128
+  embedding_dim: 128
+training:
+  batch_size: 64
+  epochs: 100
+  shuffle_training: True
+  lr: 1.e-3
+  l2norm: 1.e-5
+  use_gpu: True
+  recloss_factor: 1.
+  optimize_signature_features: False
+  save_dir: results/demo_v3
+  model_prefix: model

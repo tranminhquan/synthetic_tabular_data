@@ -3,18 +3,19 @@
 
 from syntabtf.processing.transform import TabTransform
 from syntabtf.nn.vae import TVAE
+from syntabtf.utils.configs import load_generating_config
 import pickle
 import os
 import torch
 
-# CONFIG =============================
-save_dir = 'results/demo_v3'
-model_prefix = 'model'
+# LOAD CONFIG
+cfg = load_generating_config('configs/local/generating.yaml')
 
-n_samples = 200
-batch_size = 64
-use_sigmoid = False # in testing, seting sigmoid to True in generation gives the incorrect results!
-# END CONFIG =============================
+save_dir = cfg['save_dir']
+model_prefix = cfg['model_prefix']
+n_samples = cfg['n_samples']
+batch_size = cfg['batch_size']
+use_sigmoid = cfg['use_sigmoid']
 
 # LOAD MODEL AND TRANFORM
 config_path = os.path.join(save_dir, model_prefix + '_config.pkl')

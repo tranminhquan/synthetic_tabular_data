@@ -1,0 +1,5 @@
+save_dir: results/demo_v3
+model_prefix: model
+n_samples: 200
+batch_size: 64
+use_sigmoid: False #in testing, seting sigmoid to True in generation gives the incorrect results!
