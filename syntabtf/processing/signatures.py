@@ -13,7 +13,7 @@ class TransformerEncoder(nn.Module):
                  tokenizer_args: Dict = {}, 
                  do_lower_case: bool = True,
                  tokenizer_name_or_path : str = None,
-                 pooling_size: int = 0
+                 decomposited_size: int = 32
                  ):
         super(TransformerEncoder, self).__init__()
         
@@ -23,13 +23,12 @@ class TransformerEncoder(nn.Module):
                                                        cache_dir=cache_dir, 
                                                        **tokenizer_args)
         
-        self.embedding_dim = 192 # TO-DO: hard code setting
-
+        pooling_size: int = self.get_word_embedding_dimension()//decomposited_size
         self.avgPolling = nn.AvgPool1d(pooling_size, stride=pooling_size) if pooling_size > 0 else None
 
         self.config_keys = ['max_seq_length', 'do_lower_case']
         self.do_lower_case = do_lower_case
-        #No max_seq_length set. Try to infer from model
+        # No max_seq_length set. Try to infer from model
         if max_seq_length is None:
             self.max_seq_length = min(self.sent_encoder.config.max_position_embeddings, 
                                       self.tokenizer.model_max_length) if self.__is_model_max_length_avaible() else 32
@@ -59,7 +58,7 @@ class TransformerEncoder(nn.Module):
     def get_word_embedding_dimension(self) -> int:
         return self.sent_encoder.config.hidden_size
 
-    def encode(self, features, to_numpy=True):
+    def encode(self, features, to_numpy=True, device="cpu"):
         if to_numpy:
             with torch.no_grad():
                 pooler_output = self.sent_encoder(features['input_ids'], attention_mask=features['attention_mask']).pooler_output  # [bs, dim]
@@ -83,7 +82,6 @@ class TransformerEncoder(nn.Module):
     def encode_col_name(self, column_name):
         features = self.tokenize(column_name)
         embedding = self.encode(features, to_numpy=True)
-        
         return embedding
 
     def forward(self, features, to_numpy=True):

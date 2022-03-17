@@ -1,12 +1,13 @@
-from processing.signatures import TransformerEncoder
+from syntabtf.processing.signatures import TransformerEncoder
 import os
 import glob
 import pandas as pd
 import pickle
 import shutil
 
-
-transformers = TransformerEncoder("bert-base-multilingual-uncased", max_seq_length=10, pooling_size=4)
+device = torch.device(f"cuda:{torch.cuda.current_device()}") if torch.cuda.is_available() else torch.device("cpu")
+transformers = TransformerEncoder("bert-base-multilingual-uncased", max_seq_length=10, decomposited_size=32)
+transformers.to(device)
 transformers.eval()
 
 home = './data/zip/dataset'
