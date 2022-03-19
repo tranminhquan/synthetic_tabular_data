@@ -34,5 +34,5 @@ training:
   use_gpu: True
   recloss_factor: 1.
   optimize_signature_features: False
-  save_dir: results/demo_v3
+  save_dir: results/new_signature
   model_prefix: model

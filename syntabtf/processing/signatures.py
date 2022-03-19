@@ -22,7 +22,7 @@ class TransformerEncoder(nn.Module):
         self.tokenizer = AutoTokenizer.from_pretrained(tokenizer_name_or_path if tokenizer_name_or_path is not None else model_name_or_path, 
                                                        cache_dir=cache_dir, 
                                                        **tokenizer_args)
-        
+        self.embedding_dim = decomposited_size
         pooling_size: int = self.get_word_embedding_dimension()//decomposited_size
         self.avgPolling = nn.AvgPool1d(pooling_size, stride=pooling_size) if pooling_size > 0 else None
 

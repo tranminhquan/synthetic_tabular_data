@@ -1,5 +1,6 @@
 
 from collections import namedtuple
+from matplotlib.transforms import Transform
 from sklearn.mixture import BayesianGaussianMixture
 import numpy as np
 import pandas as pd
@@ -56,8 +57,8 @@ class TabTransform():
         # column names embedding
         if col_name_embedding:
             max_seq_length = kwargs['max_seq_length'] if 'max_seq_length' in kwargs else 10
-            pooling_size = kwargs['pooling_size'] if 'pooling_size' in kwargs else 4
-            self.colname_transformer = TransformerEncoder("bert-base-multilingual-uncased", max_seq_length=max_seq_length, pooling_size=pooling_size)
+            decomposited_size = kwargs['decomposited_size'] if 'decomposited_size' in kwargs else 32
+            self.colname_transformer = TransformerEncoder("bert-base-multilingual-uncased", max_seq_length=max_seq_length, decomposited_size=decomposited_size)
         else:
             self.colname_transformer = None
                 
