@@ -77,7 +77,7 @@ class TVAE(nn.Module):
         return x_rec, mu, logvar, sigmas
     
     
-    def sample(self, n_samples, batch_size):
+    def sample(self, n_samples, batch_size, to_df=False):
         """
         Generate synthetic data
         """

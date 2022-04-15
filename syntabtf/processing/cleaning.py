@@ -1,8 +1,13 @@
 import pandas as pd
 
 class TabCleaning():
-#     def __init__(self):
-#         pass
+    def __init__(self, exclude=[]):
+        """AI is creating summary for __init__
+
+        Args:
+            exclude: exclude these columns in automated cleaning
+        """
+        self.exclude_cols = exclude
     
     def is_timestamp(self, series):
         if pd.core.dtypes.common.is_datetime_or_timedelta_dtype(series):
@@ -29,19 +34,27 @@ class TabCleaning():
             
         return False
     
+    def is_nan(self, series):
+        if series.isna().any():
+            return True
+        
+        return False
+    
     
     def fill_na(self, series):
-        if not series.isna().any():
-            return series
         mean = series[series.isna() == False].mean()
         series = series.fillna(mean)
         
         return series
             
-    def clean(self, df, remove_timestamp=True, remove_low_frequency=True, remove_id=True, verbose=1):
+    def clean(self, df, remove_timestamp=True, remove_low_frequency=True, remove_id=True, verbose=1, **kwargs):
         columns = df.columns
         for col in columns:
             if verbose: print('col ', col)
+            
+            if col in self.exclude_cols:
+                print('\t Excluded ')
+                continue
             
             series = df[col]
             
@@ -53,16 +66,23 @@ class TabCleaning():
                     continue
             
             if remove_low_frequency:
-                if self.is_low_frequency_categorical_col(series):
+                min_freq_threshold = kwargs['min_freq_threshold'] if 'min_freq_threshold' in kwargs else 0.08
+                pct_to_remove = kwargs['pct_to_remove'] if 'pct_to_remove' in kwargs else 0.8
+                if self.is_low_frequency_categorical_col(series, min_freq_threshold=min_freq_threshold, pct_to_remove=pct_to_remove):
                     if verbose: print('\t del: low frequency values or id column')
                     del df[col]
                     continue
-                    
-            # FILL NA
-            series = self.fill_na(series)
-            
+                
             # UPDATE SERIES
-            df[col] = series
+            # FILL NA
+            if self.is_nan(series):
+                if series.dtype == object: # remove nan
+                    df.dropna(subset=[series.name], inplace=True)
+                else:
+                    series = self.fill_na(series)
+                    df[col] = series
+            else:
+                df[col] = series
             
             if verbose: print('\t pass')
                     

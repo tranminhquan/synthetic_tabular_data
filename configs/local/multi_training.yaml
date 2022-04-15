@@ -1,0 +1,37 @@
+source_domain_dir: data/sdgym_filtered # directory that store all source domain csv file
+preprocessing:
+  clean_data: True
+  clean_exclude_columns: [] # exclude those columns in automated cleaning
+  min_freq_threshold: 0.
+  percentage_to_remove: 0.8
+transform:
+  max_cols: 3000
+  signature_settings:
+    column_name_embedding: False
+    quantile: False
+  categorical_columns:  # auto detect categorical columns in df
+  categorical_settings:
+    normalize: True
+  numerical_settings:
+    max_gaussian_components: 10
+    gaussian_weight_threshold: 5.e-3
+model:
+  encoder_hiddens:
+    - 128
+    - 128
+  decoder_hiddens:
+    - 128
+    - 128
+  embedding_dim: 128
+training:
+  batch_size: 64
+  epochs: 2
+  shuffle_training: True
+  lr: 1.e-3
+  l2norm: 1.e-5
+  use_gpu: True
+  recloss_factor: 1.
+  optimize_signature_features: False
+  save_dir: results/multitrain
+  save_checkpoint: True # if True, the model is saved for each training iteration for each source domain dataset
+  model_prefix: model_final # final model after training all source domain datasets

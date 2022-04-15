@@ -17,7 +17,7 @@ from syntabtf.nn.vae import TVAE
 from syntabtf.utils.configs import load_training_config
 
 # LOAD CONFIG
-data_dir, clean_data, transform_cfg, model_cfg, training_cfg = load_training_config('configs/local/training.yaml')
+data_dir, preprocessing_cfg, transform_cfg, model_cfg, training_cfg = load_training_config('configs/local/training.yaml')
 
 # LOAD DATA
 data_dir = pickle.load(open('data/demo/demo_tabular_data.pkl', 'rb'))
@@ -26,8 +26,8 @@ df = pd.read_csv(data_dir) if type(data_dir) is str else data_dir
 print(df)
 
 # CLEAN DATA
-if clean_data:
-    df = TabCleaning().clean(df)
+if preprocessing_cfg['clean_data']:
+    df = TabCleaning(exclude=preprocessing_cfg['clean_exclude_columns']).clean(df, preprocessing_cfg['min_freq_threshold'], preprocessing_cfg['percentage_to_remove'])
     print(df)
 
 # TRANSFORM DATA

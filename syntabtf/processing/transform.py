@@ -33,20 +33,20 @@ ColumnTransformInfo = namedtuple(
 
 class TabTransform():
     
-    def __init__(self, categorical_cols, 
-                 max_cols, 
+    def __init__(self, categorical_cols=None, 
+                 max_cols=50, 
                  max_guassian_components=10, 
                  gaussian_weight_threshold=5e-3,
                  col_name_embedding=False,
                  **kwargs):
-        """init
+        """AI is creating summary for __init__
 
         Args:
-            categorical_cols ([list]): [list of categorical columns]
-            max_cols ([int]): [number of maximum cols]
+            categorical_cols ([type], optional): [description]. Defaults to None.
+            max_cols (int, optional): [description]. Defaults to 50.
             max_guassian_components (int, optional): [description]. Defaults to 10.
-            gaussian_weight_threshold ([int], optional): [numner of gaussian components in numerical columns]. Defaults to 5e-3.
-            col_name_embedding (bool, optional): [Whether to use column name as additional signature feature or not]. Defaults to False.
+            gaussian_weight_threshold ([type], optional): [description]. Defaults to 5e-3.
+            col_name_embedding (bool, optional): [description]. Defaults to False.
         """
         
         self.categorical_cols = categorical_cols # list or numpy array of categorical column names
@@ -85,6 +85,11 @@ class TabTransform():
         self.output_info_list = [] # additionally store `SpanInfo`
         self.col_transform_info_list = [] # store `ColumnTransformInfo`
         self.dimensions = 0
+        
+        # if categorical cols is not provided, automatically detect by consider dtype of column from pandas
+        if self.categorical_cols is None:
+            print('Automatically detect categorical columns')
+            self.categorical_cols = [col for col in df.columns if df[col].dtypes == object]
         
         for col in df.columns:
             if col in self.categorical_cols:
