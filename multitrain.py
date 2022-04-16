@@ -7,6 +7,9 @@ from torch.optim import Adam
 import pickle
 import pandas as pd
 import os
+import numpy as np
+
+from sklearn.model_selection import KFold
 
 from syntabtf.processing.cleaning import TabCleaning
 from syntabtf.processing.transform import TabTransform
@@ -16,12 +19,17 @@ from syntabtf.nn.vae import TVAE
 from syntabtf.utils.configs import load_multi_training_config
 
 import gc
+import random
+import yaml
 
-def train_source_domains(data_dirs, model, optimizer, device, transform_cfg):
+SEED = 12
+random.seed(SEED)
+
+def train_source_domains(src_data_dirs, tar_data_dirs, model, optimizer, device, transform_cfg, **kwargs):
     """ Train source domain dataset given by data_dirs
 
     Args:
-        data_dirs ([type]): [description]
+        src_data_dirs ([type]): [description]
         model ([type]): [description]
         optimizer ([type]): [description]
         device ([type]): [description]
@@ -31,14 +39,17 @@ def train_source_domains(data_dirs, model, optimizer, device, transform_cfg):
         Pytorch trained model
     """
     
-    for iter, data_dir in enumerate(data_dirs):
+    fold = kwargs['fold'] if 'fold' in kwargs else None
+    
+    
+    for iter, data_dir in enumerate(src_data_dirs):
         # LOAD DATAFRAME
         print('Process data ', os.path.basename(data_dir))
         df = pd.read_csv(data_dir)
         
         # TEMP: limit the number of columns to test the pipeline
         if len(df.columns) >= 10:
-            print('Temporary limit # columns, get first 15 of ', len(df.columns))
+            print('Temporary limit # columns, get first 10 of ', len(df.columns))
             df = df.iloc[:, :10]
         
         # CLEAN DATA
@@ -79,6 +90,8 @@ def train_source_domains(data_dirs, model, optimizer, device, transform_cfg):
             if training_cfg['save_dir'] is not None:
                 # Create dest dir to store artifacts
                 save_dir = training_cfg['save_dir']
+                if fold is not None:
+                    save_dir = os.path.join(save_dir, fold)
                 if not os.path.exists(save_dir):
                     os.mkdir(save_dir)
                     
@@ -108,9 +121,21 @@ def train_source_domains(data_dirs, model, optimizer, device, transform_cfg):
 
     # Create dest dir to store artifacts
     save_dir = training_cfg['save_dir']
+    if fold is not None:
+        save_dir = os.path.join(save_dir, fold)
     if not os.path.exists(save_dir):
         os.mkdir(save_dir)
+        
+    # save training info
+    training_info = dict(source_data_directory=[str(k) for k in src_data_dirs],
+                         target_data_directory=str(tar_data_dirs))
+    
+    # print('tar_data_dirs: ', type(tar_data_dirs), len(tar_data_dirs))
+    # print(np.fromstring(tar_data_dirs))
+    
+    yaml.dump(training_info, open(os.path.join(save_dir, 'training_info.yaml'), 'w'), default_flow_style=False)
 
+    # save model
     model_prefix = 'model_final' if training_cfg['model_prefix'] is None else training_cfg['model_prefix']
     weights_name = model_prefix + '_weights.py'
     # hist_name = model_prefix + '_hist.pkl'
@@ -124,8 +149,41 @@ def train_source_domains(data_dirs, model, optimizer, device, transform_cfg):
     
     return model
 
+
+def train_finetune_and_score(src_data_dirs, tar_data_dirs, **kwargs):
+    # INIT MODEL AND OPTIMIZER
+    device = torch.device('cuda') if training_cfg['use_gpu'] and torch.cuda.is_available() else torch.device('cpu')
+    model = TVAE(data_dim = transform_cfg['max_cols'], 
+                    encoder_hiddens=model_cfg['encoder_hiddens'], 
+                    decoder_hiddens=model_cfg['decoder_hiddens'], 
+                    emb_dim=model_cfg['embedding_dim'])
+    optimizer = Adam(model.parameters(), lr=training_cfg['lr'], weight_decay=training_cfg['l2norm'])
+    
+    # train source domains
+    src_model = train_source_domains(src_data_dirs=src_data_dirs, 
+                                     tar_data_dirs = tar_data_dirs,
+                                    model=model, 
+                                    optimizer=optimizer, 
+                                    device=device, 
+                                    transform_cfg=transform_cfg,
+                                    **kwargs)
+    
+    # TODO: fine-tune on small amount of data of target domain
+        
+    # TODO: calculate score based on SDMetrics
+    
+    del(src_data_dirs)
+    del(tar_data_dirs)
+    del(src_model)
+    del(model)
+    del(optimizer)
+    del(device)
+    
+    gc.collect()
+    
+    
 # LOAD CONFIG
-source_domain_dir, preprocessing_cfg, transform_cfg, model_cfg, training_cfg = load_multi_training_config('configs/local/multi_training.yaml')
+source_domain_dir, target_domain_dir, preprocessing_cfg, transform_cfg, model_cfg, training_cfg = load_multi_training_config('configs/local/multi_training.yaml')
 
 # LOAD DATA
 # get all sub dir csv file
@@ -138,15 +196,32 @@ print('All csv file in source domain: ', data_dirs)
 # meta_dirs = [[os.path.join(source_domain_dir, _dir, k) for k in os.listdir(os.path.join(source_domain_dir, _dir)) if 'metadata.json' in k] for _dir in sub_dirs]
 # meta_dirs = [item for sublist in meta_dirs for item in sublist]
 
-# INIT MODEL AND OPTIMIZER
-device = torch.device('cuda') if training_cfg['use_gpu'] and torch.cuda.is_available() else torch.device('cpu')
-model = TVAE(data_dim = transform_cfg['max_cols'], 
-                encoder_hiddens=model_cfg['encoder_hiddens'], 
-                decoder_hiddens=model_cfg['decoder_hiddens'], 
-                emb_dim=model_cfg['embedding_dim'])
-optimizer = Adam(model.parameters(), lr=training_cfg['lr'], weight_decay=training_cfg['l2norm'])
+# TRAIN, FINE AND SCORE
+if target_domain_dir is not None: # auto split 1-vs-rest as target domain
+    print('Target domain dir: ', target_domain_dir)
+    target_domain_dir = [[os.path.join(target_domain_dir, _dir, k) for k in os.listdir(os.path.join(target_domain_dir, _dir)) if '.csv' in k] for _dir in sub_dirs]
+    target_domain_dir = [item for sublist in target_domain_dir for item in sublist]
+    
+    train_finetune_and_score(data_dirs, target_domain_dir)
+    
+else:
+    print('Target domain dir is not found, automatically apply 1-vs-rest')
+    
+    # SPLIT 1-VS-REST (1 DST DOMAIN, REST SRC DOMAINS)
+    k_fold = KFold(n_splits=len(data_dirs), shuffle=True, random_state=SEED) # 1-vs-rest
 
-# TODO: SPLIT 1-VS-REST (1 DST DOMAIN, REST SRC DOMAINS)
-
-src_model = train_source_domains(data_dirs=data_dirs, model=model, optimizer=optimizer, device=device, transform_cfg=transform_cfg)
-print('src_model: ', vars(src_model))
+    # Iter through each fold
+    for iter_step, (src_indices, tar_index) in enumerate(k_fold.split(data_dirs)):
+        print('=====================Iter {}========================'.format(iter_step))
+        
+        src_data_dirs = np.array(data_dirs)[src_indices]
+        tar_data_dirs = np.array(data_dirs)[tar_index][0]
+        
+        print('* source dirs: ', src_data_dirs)
+        print('* destination ', tar_data_dirs)
+        
+        train_finetune_and_score(src_data_dirs, tar_data_dirs, fold='fold_' + str(iter_step))
+        
+        print('===================================================')
+    
+    

@@ -1,5 +1,9 @@
 df_path: data/demo/demo_tabular_data.pkl
-clean_data: True
+preprocessing:
+  clean_data: True
+  clean_exclude_columns: None # exclude those columns in automated cleaning
+  min_freq_threshold: 0.
+  percentage_to_remove: 0.8
 transform:
   max_cols: 3000
   signature_settings:

@@ -1,4 +1,5 @@
-source_domain_dir: data/sdgym_filtered # directory that store all source domain csv file
+source_domain_dir: data/sdgym_filtered # directory that store all sub-dirs, each one has a csv file and a metadata.json (if any)
+target_domain_dir: # if empty, automatically apply kfold (1-vs-rest) to get target domain
 preprocessing:
   clean_data: True
   clean_exclude_columns: [] # exclude those columns in automated cleaning

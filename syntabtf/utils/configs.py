@@ -18,11 +18,12 @@ def load_multi_training_config(config):
     config = yaml.safe_load(open(config)) if type(config) is str else config
     preprocessing = config['preprocessing']
     source_domain_dir = config['source_domain_dir']
+    target_domain_dir = config['target_domain_dir']
     transform = config['transform']
     model = config['model']
     training = config['training']
     
-    return source_domain_dir, preprocessing, transform, model, training
+    return source_domain_dir, target_domain_dir, preprocessing, transform, model, training
 
 def load_generating_config(config):
     assert type(config) is str or type(config) is dict
