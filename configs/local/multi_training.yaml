@@ -36,3 +36,5 @@ training:
   save_dir: results/multitrain
   save_checkpoint: True # if True, the model is saved for each training iteration for each source domain dataset
   model_prefix: model_final # final model after training all source domain datasets
+finetuning:
+  finetune_size: 0.2 # percentage of amount of data for finetuning

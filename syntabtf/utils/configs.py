@@ -22,8 +22,9 @@ def load_multi_training_config(config):
     transform = config['transform']
     model = config['model']
     training = config['training']
+    finetuning = config['finetuning']
     
-    return source_domain_dir, target_domain_dir, preprocessing, transform, model, training
+    return source_domain_dir, target_domain_dir, preprocessing, transform, model, training, finetuning
 
 def load_generating_config(config):
     assert type(config) is str or type(config) is dict
