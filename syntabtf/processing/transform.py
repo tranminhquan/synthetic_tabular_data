@@ -90,16 +90,23 @@ class TabTransform():
         if self.categorical_cols is None:
             print('Automatically detect categorical columns')
             self.categorical_cols = [col for col in df.columns if df[col].dtypes == object]
+            print('Found categorical columns: ', self.categorical_cols)
         
+        
+        print('Fitting columns ...')
         for col in df.columns:
+            print(' - {}'.format(col))
             if col in self.categorical_cols:
+                print(' -> categorical')
                 col_transform_info = self.fit_categorical(col, df[col], categorical_norm)
             else:
+                print(' -> numerical')
                 col_transform_info = self.fit_numerical(col, df[col], categorical_norm)
                 
             self.output_info_list.append(col_transform_info.output_info)
             self.col_transform_info_list.append(col_transform_info)
             self.dimensions += col_transform_info.output_dimensions
+            print(' --- ')
         
     
     def fit_categorical(self, col_name, data, categorical_norm):
@@ -163,14 +170,18 @@ class TabTransform():
         self.raw_dtypes = df.infer_objects().dtypes # holder for later inverse transformation
         
         # transform
+        print('Transforming columns ...')
         for col_transform_info in self.col_transform_info_list:
-            
+            print('- {}'.format(col_transform_info.column_name))
             if col_transform_info.column_type == 'categorical':
+                print('-> categorical')
                 col_data_list += self.transform_categorical(col_transform_info, df[col_transform_info.column_name])
                 
             elif col_transform_info.column_type == 'numerical':
+                print('-> numerical')
                 col_data_list += self.transform_numerical(col_transform_info, df[col_transform_info.column_name])
-        
+            print(' --- ')
+            
         col_data_list = np.concatenate(col_data_list, axis=1)
         
         
