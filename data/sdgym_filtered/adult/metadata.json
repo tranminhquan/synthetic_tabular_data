@@ -1,0 +1,62 @@
+{
+    "tables": {
+        "adult": {
+            "fields": {
+                "age": {
+                    "type": "numerical",
+                    "subtype": "integer"
+                },
+                "workclass": {
+                    "type": "categorical"
+                },
+                "fnlwgt": {
+                    "type": "numerical",
+                    "subtype": "integer"
+                },
+                "education": {
+                    "type": "categorical"
+                },
+                "education-num": {
+                    "type": "numerical",
+                    "subtype": "integer"
+                },
+                "marital-status": {
+                    "type": "categorical"
+                },
+                "occupation": {
+                    "type": "categorical"
+                },
+                "relationship": {
+                    "type": "categorical"
+                },
+                "race": {
+                    "type": "categorical"
+                },
+                "sex": {
+                    "type": "categorical"
+                },
+                "capital-gain": {
+                    "type": "numerical",
+                    "subtype": "integer"
+                },
+                "capital-loss": {
+                    "type": "numerical",
+                    "subtype": "integer"
+                },
+                "hours-per-week": {
+                    "type": "numerical",
+                    "subtype": "integer"
+                },
+                "native-country": {
+                    "type": "categorical"
+                },
+                "label": {
+                    "type": "categorical"
+                }
+            },
+            "path": "adult.csv",
+            "target": "label"
+        }
+    },
+    "problem_type": "binary_classification"
+}
