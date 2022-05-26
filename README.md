@@ -58,3 +58,6 @@ In the configs file
 
 ### Run multi-training
 Run `python3 multitrain.py`
+
+The sdgym dataset can be downloaded here
+https://drive.google.com/drive/folders/1z6WmY057FfAqFf8DRma0ici7p_jCogJ9?usp=sharing
