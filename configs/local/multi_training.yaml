@@ -1,5 +1,6 @@
 source_domain_dir: data/sdgym_filtered # directory that store all sub-dirs, each one has a csv file and a metadata.json (if any)
 target_domain_dir: # if empty, automatically apply kfold (1-vs-rest) to get target domain
+n_folds: 3 # number of fold to split if target directory is not indicated
 preprocessing:
   clean_data: True
   clean_exclude_columns: [] # exclude chosen columns to apply cleaning, if empty, all columns are considered
@@ -34,7 +35,7 @@ training:
   recloss_factor: 1.
   optimize_signature_features: False
   save_dir: results/multitrain
-  save_checkpoint: True # if True, the model is saved for each training iteration for each source domain dataset
+  save_checkpoint: False # if True, the model is saved for each training iteration for each source domain dataset
   model_prefix: model_final # final model after training all source domain datasets
 finetuning:
   finetune_size: 0.2 # percentage of amount of data for finetuning

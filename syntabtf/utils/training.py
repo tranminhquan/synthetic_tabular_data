@@ -55,3 +55,5 @@ def train(model, train_loader, epochs, optimizer, criterion, device, val_loader=
         hist.append([avgloss])
 
     return model, hist
+
+
