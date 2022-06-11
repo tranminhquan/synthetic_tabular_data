@@ -7,9 +7,9 @@ preprocessing:
   min_freq_threshold: 0.
   percentage_to_remove: 0.8
 transform:
-  max_cols: 100 # max column when apply transformation. If after transforming, the tabular cols < max_cols, add padding, else crop tabular cols to get max_cols
+  max_cols: 1000 # max column when apply transformation. If after transforming, the tabular cols < max_cols, add padding, else crop tabular cols to get max_cols
   signature_settings:
-    column_name_embedding: False # whether to apply BERT to encode column name or not
+    column_name_embedding: True # whether to apply BERT to encode column name or not
     quantile: False # whether to apply quantile as a signature feature or not
   categorical_columns:  # if None, auto detect categorical columns in df
   categorical_settings:
@@ -19,12 +19,12 @@ transform:
     gaussian_weight_threshold: 5.e-3
 model:
   encoder_hiddens: # each row below represents a layer, and the number represents the dimension of that layer
-    - 128
-    - 128
+    - 64
+    - 64
   decoder_hiddens:  # each row below represents a layer, and the number represents the dimension of that layer
-    - 128
-    - 128
-  embedding_dim: 128 # embedding dim of the output of the encoder
+    - 64
+    - 64
+  embedding_dim: 64 # embedding dim of the output of the encoder
 training:
   batch_size: 128
   epochs: 50
@@ -33,8 +33,8 @@ training:
   l2norm: 1.e-5
   use_gpu: True
   recloss_factor: 1.
-  optimize_signature_features: False
-  save_dir: results/multitrain
+  optimize_signature_features: True
+  save_dir: results/multitrain_w_signature
   save_checkpoint: False # if True, the model is saved for each training iteration for each source domain dataset
   model_prefix: model_final # final model after training all source domain datasets
 finetuning:

@@ -10,6 +10,7 @@ from sklearn.model_selection import KFold
 
 from syntabtf.utils.configs import load_multi_training_config
 from syntabtf.utils.tf import train_finetune_and_score
+from syntabtf.utils.preprocessing import preprocess_clean, preprocess_transform
 
 import random
 
@@ -56,8 +57,10 @@ if target_domain_dir is not None:
 else: # auto split 1-vs-rest as target domain
     print('Target domain dir is not found, automatically apply 1-vs-rest')
     
-    # Prepare TabCleaning and TabTransform
+    # # Prepare TabCleaning and TabTransform
+    # print('Pre-process cleaning ...')
     # cleaning_prefix = preprocess_clean(data_dirs, preprocessing_cfg)
+    # print('Pre-process transforming ...')
     # instance_name, data_name = preprocess_transform(data_dirs, transform_cfg, cleaning_prefix='clean_')
     
     # SPLIT 1-VS-REST (1 DST DOMAIN, REST SRC DOMAINS)
