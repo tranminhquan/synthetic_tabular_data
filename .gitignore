@@ -113,6 +113,9 @@ venv.bak/
 # history
 .history/
 
+# source data
+data/
+
 # results data
 results/
 
