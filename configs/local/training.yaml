@@ -1,7 +1,8 @@
 df_path: data/demo/demo_tabular_data.pkl
 preprocessing:
   clean_data: True
-  clean_exclude_columns: None # exclude those columns in automated cleaning
+  clean_exclude_columns: [] # exclude those columns in automated cleaning
+  clean_remove_columns: ['start_date', 'end_date']
   min_freq_threshold: 0.
   percentage_to_remove: 0.8
 transform:
@@ -38,5 +39,6 @@ training:
   use_gpu: True
   recloss_factor: 1.
   optimize_signature_features: False
-  save_dir: results/new_signature
+  # save_dir: results/new_signature
+  save_dir: results/6Jan23
   model_prefix: model

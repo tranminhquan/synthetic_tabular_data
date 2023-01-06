@@ -20,30 +20,38 @@ from syntabtf.utils.configs import load_training_config
 data_dir, preprocessing_cfg, transform_cfg, model_cfg, training_cfg = load_training_config('configs/local/training.yaml')
 
 # LOAD DATA
+print('-------------------- LOAD DATA -------------------------')
 data_dir = pickle.load(open('data/demo/demo_tabular_data.pkl', 'rb'))
 assert type(data_dir) is str or type(data_dir) is pd.DataFrame
 df = pd.read_csv(data_dir) if type(data_dir) is str else data_dir
 print(df)
 
 # CLEAN DATA
+print('-------------------- CLEAN DATA -------------------------')
 if preprocessing_cfg['clean_data']:
-    df = TabCleaning(exclude=preprocessing_cfg['clean_exclude_columns']).clean(df, preprocessing_cfg['min_freq_threshold'], preprocessing_cfg['percentage_to_remove'])
+    df = TabCleaning(exclude=preprocessing_cfg['clean_exclude_columns'], \
+                    remove=preprocessing_cfg['clean_remove_columns']).clean(df, preprocessing_cfg['min_freq_threshold'], preprocessing_cfg['percentage_to_remove'])
     print(df)
 
 # TRANSFORM DATA
+print('-------------------- TRANSFORM -------------------------')
 tabtransform = TabTransform(categorical_cols=transform_cfg['categorical_columns'], 
                             max_cols=transform_cfg['max_cols'], 
                             max_gaussian_components=transform_cfg['numerical_settings']['max_gaussian_components'], 
                             gaussian_weight_threshold=transform_cfg['numerical_settings']['gaussian_weight_threshold'],
                             col_name_embedding=transform_cfg['signature_settings']['column_name_embedding'])
+                            
 tabtransform.fit(df, categorical_norm=transform_cfg['categorical_settings']['normalize'])
+
 data = tabtransform.transform(df)
 
 # DATASET AND DATA LOADER
+print('-------------------- LOADER -------------------------')
 dataset = TensorDataset(torch.from_numpy(data.astype('float32')))
 train_loader = DataLoader(dataset, batch_size=training_cfg['batch_size'], shuffle=training_cfg['shuffle_training'])
 
 # TRAINING
+print('-------------------- TRAIN -------------------------')
 device = torch.device('cuda') if training_cfg['use_gpu'] and torch.cuda.is_available() else torch.device('cpu')
 model = TVAE(data_dim = transform_cfg['max_cols'], 
              encoder_hiddens=model_cfg['encoder_hiddens'], 
@@ -62,7 +70,12 @@ model, hist = train(model, train_loader, training_cfg['epochs'], optimizer,
 
 save_dir = training_cfg['save_dir']
 model_prefix = training_cfg['model_prefix']
+
+print('-------------------- SAVE -------------------------')
 if save_dir is not None:
+    if not os.path.exists(save_dir):
+        os.mkdir(save_dir)
+
     model_prefix = 'model' if model_prefix is None else model_prefix
     weights_name = model_prefix + '_weights.py'
     hist_name = model_prefix + '_hist.pkl'

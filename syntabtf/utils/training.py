@@ -24,8 +24,11 @@ def train(model, train_loader, epochs, optimizer, criterion, device, val_loader=
     
         print('Epoch: ', epoch + 1)
         running_loss = 0.0
-        running_acc = 0.0
+        running_valloss = 0.0
+        # running_acc = 0.0
         processed = 0.0
+        avgloss = 0.
+        avgvalloss = 0.
 
         # TRAIN
         model.train()
@@ -59,15 +62,36 @@ def train(model, train_loader, epochs, optimizer, criterion, device, val_loader=
 
         print('- Avg.loss: %.4f' % (running_loss / len(train_loader.dataset)))
         avgloss = running_loss / len(train_loader.dataset)
-        
+        monitor_loss = avgloss
+
+        if val_loader is not None:
+            model.eval()
+            for i, data in enumerate(val_loader):
+                # get the inputs; data is a list of [inputs, labels]
+                inputs = data[0]
+                inputs = inputs.to(device)
+
+                # forward + backward + optimize
+                outputs, mu, logvar, sigmas = model(inputs)
+                rec_loss, kl_loss = criterion(outputs, inputs, sigmas, mu, logvar, output_info_list, recloss_factor, optimize_signature)
+                valloss = rec_loss + kl_loss
+
+                # print statistics
+                running_valloss += (valloss.item() * inputs.size(0))
+                
+            print('- Avg.val_loss: %.4f' % (running_valloss / len(val_loader.dataset)))
+            avgvalloss = running_valloss / len(val_loader.dataset)
+            monitor_loss = avgvalloss
+
+
         # early stopping
         if use_early_stopping:
-            early_stopping(avgloss, model)
+            early_stopping(monitor_loss, model)
             if early_stopping.early_stop:
                 print("*** Early stopping ***")
                 break
 
-        hist.append([avgloss])
+        hist.append([avgloss, avgvalloss])
 
     return model, hist
 

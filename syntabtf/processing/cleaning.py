@@ -1,13 +1,15 @@
 import pandas as pd
 
 class TabCleaning():
-    def __init__(self, exclude=[]):
+    def __init__(self, exclude=[], remove=[]):
         """AI is creating summary for __init__
 
         Args:
             exclude: exclude these columns in automated cleaning
+            remove: remove these columns when cleaning 
         """
         self.exclude_cols = exclude
+        self.remove_cols = remove
     
     def is_timestamp(self, series):
         if pd.core.dtypes.common.is_datetime_or_timedelta_dtype(series):
@@ -51,6 +53,11 @@ class TabCleaning():
         columns = df.columns
         for col in columns:
             if verbose: print('col ', col)
+
+            if col in self.remove_cols:
+                del df[col]
+                print('\t Removed')
+                continue
             
             if col in self.exclude_cols:
                 print('\t Excluded ')
